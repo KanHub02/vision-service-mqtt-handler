@@ -26,9 +26,6 @@ Prerequisites:
 - Pillow (PIL): For image processing.
 - requests: For HTTP requests to send events.
 
-Author: Your Name
-Created: YYYY-MM-DD
-Last Updated: YYYY-MM-DD
 """
 
 import os
