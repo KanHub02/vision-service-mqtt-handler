@@ -32,3 +32,4 @@ temp
 notebook_utils.py
 web/.env
 data.zip
+.env
