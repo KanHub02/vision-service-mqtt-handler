@@ -1,11 +1,11 @@
 """
-Frigate Event Handler with MQTT Integration
+Event Handler with MQTT Integration
 
-This script is designed to integrate with the Frigate CCTV software, handling events
+This script is designed to integrate with the CCTV software, handling events
 via MQTT messages, processing images from those events, and performing custom actions
 such as image format conversion, state number detection, and event forwarding to a specified URL.
 
-The script uses MQTT to subscribe to Frigate events, retrieves event data, converts
+The script uses MQTT to subscribe to events, retrieves event data, converts
 JPEG images to PNG in memory (without the need for temporary storage), and detects state
 numbers from these images using a placeholder function. Detected events are then sent
 to a specified URL with the camera name, label, bounding boxes, and detected state number.
@@ -16,10 +16,10 @@ Key Features:
 - Includes robust logging for easier troubleshooting and monitoring.
 
 Environment Variables:
-- FRIGATE_URL: URL of the Frigate server.
+- DEALER_URL: URL of the DEALER_URL server.
 - MQTT_BROKER_URL: URL of the MQTT broker.
 - MQTT_BROKER_PORT: Port of the MQTT broker.
-- TOPIC_NAME: MQTT topic to subscribe to for Frigate events.
+- TOPIC_NAME: MQTT topic to subscribe to for events.
 
 Prerequisites:
 - paho-mqtt: For MQTT communication.
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 DEALER_URL = os.getenv("DEALER_URL", "")
 MQTT_BROKER_URL = os.getenv("MQTT_BROKER_URL", "")
 MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
-TOPIC_NAME = os.getenv("TOPIC_NAME", "frigate/events/#")
+TOPIC_NAME = os.getenv("TOPIC_NAME", "")
 
 
 def convert_image_in_memory(byte_data: bytes) -> bytes:
