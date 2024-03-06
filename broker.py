@@ -43,7 +43,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DEALER_URL = os.getenv("DEALER_URL", "http://frigate:5000")
+DEALER_URL = os.getenv("DEALER_URL", "")
 MQTT_BROKER_URL = os.getenv("MQTT_BROKER_URL", "")
 MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
 TOPIC_NAME = os.getenv("TOPIC_NAME", "frigate/events/#")
