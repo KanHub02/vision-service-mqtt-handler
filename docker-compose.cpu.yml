@@ -6,7 +6,7 @@ services:
       context: ./vision_service/docker
       dockerfile: Dockerfile.cpu
 
-    command: /bin/sh -c "pip install -r requirements.txt && python broker.py"
+    command: /bin/sh -c "pip install -r requirements.txt && python3 broker.py"
     environment:
       - MQTT_URL=${MQTT_URL}
     volumes:
