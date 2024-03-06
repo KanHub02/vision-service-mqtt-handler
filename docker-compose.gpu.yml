@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  vision_service_mqtt:
+    build:
+      context: ./vision_service/docker
+      dockerfile: Dockerfile.gpu
+    environment:
+      - MQTT_URL=${MQTT_URL}
+    volumes:
+      - .:/usr/src/app
