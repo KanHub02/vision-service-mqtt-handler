@@ -1,0 +1,3 @@
+[submodule "vision_service"]
+	path = vision_service
+	url = git@github.com:PetaBytePro/vision_service.git
