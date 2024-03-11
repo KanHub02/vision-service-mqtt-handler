@@ -3,6 +3,6 @@ version: "3"
 services:
     vision_service_cpu:
       build: .
-      command: /bin/sh -c "pip install -r requirements.txt && python3 broker.py"
+      command: sh -c "pip install -r requirements.txt && python3 broker.py"
       volumes:
         - .:/usr/src/app

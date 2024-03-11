@@ -20,4 +20,6 @@ RUN apt-get install ffmpeg libsm6 libxext6  -y
 # Copy the current directory contents into the container at the working directory
 COPY . .
 
-RUN python3 vision_service/setup.py -q develop
+WORKDIR /vision_service
+
+RUN python3 setup.py -q develop

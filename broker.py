@@ -34,33 +34,62 @@ import requests
 from typing import Optional, List, Tuple
 from PIL import Image
 import paho.mqtt.client as mqtt
-import io
 import logging
+
+from vision_service.execute import process_image
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DEALER_URL = os.getenv("DEALER_URL", "")
-MQTT_BROKER_URL = os.getenv("MQTT_BROKER_URL", "")
-MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
-TOPIC_NAME = os.getenv("TOPIC_NAME", "")
+DEALER_URL: str = os.getenv("DEALER_URL", "")
+MQTT_BROKER_URL: str = os.getenv("MQTT_BROKER_URL", "")
+MQTT_BROKER_PORT: int = int(os.getenv("MQTT_BROKER_PORT", "1883"))
+TOPIC_NAME: str = os.getenv("TOPIC_NAME", "")
+
+MEDIA_PATH: str = "media" #Media path, save converted images from topic
 
 
-def convert_image_in_memory(byte_data: bytes) -> bytes:
-    """Converts a JPEG image bytes to PNG format bytes."""
+def convert_image(byte_data: bytes, event_id: str) -> str:
+    """Converts a JPEG image to PNG format and saves it.
+
+    Args:
+        byte_data: The binary data of the JPEG image.
+        event_id: The unique identifier for the event.
+
+    Returns:
+        The path to the converted PNG image or the original JPEG if conversion fails.
+    """
+    os.makedirs(f"{MEDIA_PATH}/state_numbers/", exist_ok=True)
+    image_name = f"state_number_{event_id}.jpeg"
+    image_path = f"{MEDIA_PATH}/state_numbers/{image_name}"
+
+    # Write the original JPEG image
+    with open(image_path, 'wb') as file:
+        file.write(byte_data)
+
+    # Attempt to convert to PNG
     try:
-        with Image.open(io.BytesIO(byte_data)) as image:
-            img_byte_arr = io.BytesIO()
-            image.save(img_byte_arr, format="PNG")
-            return img_byte_arr.getvalue()
-    except IOError as e:
-        logger.error(f"Error converting image: {e}")
-        return byte_data
+        with Image.open(image_path) as image:
+            png_image_path = image_path.replace('.jpeg', '.png')
+            image.save(png_image_path, "PNG")
+        return png_image_path
+    except IOError:
+        logger.error(f"Cannot convert image: {image_path}")
+        return image_path
 
 
-def detect_state_number(image_bytes: bytes) -> Optional[str]:
-    """Detects the state number from image bytes."""
-    pass
+def detect_state_number(event_id: str) -> Optional[Tuple[...]]:
+    """Detects the state number from an image.
+
+    Args:
+        event_id: The unique identifier for the event.
+
+    Returns:
+        The detected state number, if any.
+    """
+    image_path = f"{MEDIA_PATH}/state_numbers/state_number_{event_id}.jpeg"
+    attrs = process_image(image_path)
+    return attrs
 
 
 def send_event(
@@ -103,9 +132,9 @@ def on_message(client, userdata, msg):
     box = topic_data["after"].get("box")
     camera = topic_data["before"].get("camera")
     byte_data = get_event_data(event_id)
-    if byte_data:
-        png_data = convert_image_in_memory(byte_data)
-        detected_number_result = detect_state_number(png_data)
+    if isinstance(byte_data, bytes):
+        convert_image(byte_data, event_id)
+        detected_number_result = detect_state_number(event_id)
         if detected_number_result:
             send_event(
                 camera_name=camera,
@@ -117,8 +146,9 @@ def on_message(client, userdata, msg):
         logger.warning("Failed to process the event")
 
 
-mqttc = mqtt.Client()
+mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect
 mqttc.on_message = on_message
 
 mqttc.connect(MQTT_BROKER_URL, MQTT_BROKER_PORT, 60)
+mqttc.loop_forever()
