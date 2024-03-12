@@ -1,5 +1,4 @@
 # Use an official Python runtime as a parent image
-FROM ubuntu:22.04
 FROM python:3.10
 
 # Set the working directory in the container
@@ -11,15 +10,15 @@ COPY vision_service/requirements.txt ./
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN apt-get update && apt-get install -y wget && \
+# Install dependencies
+RUN apt-get update && apt-get install -y wget ffmpeg libsm6 libxext6 && \
     wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb && \
     dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb && \
     rm libssl1.1_1.1.0g-2ubuntu4_amd64.deb
-RUN apt-get install ffmpeg libsm6 libxext6  -y
 
-# Copy the current directory contents into the container at the working directory
+# Copy the current directory contents into the container at /usr/src/app
 COPY . .
 
-WORKDIR /vision_service
-
+# Change the working directory to /usr/src/app/vision_service before running setup.py
+WORKDIR /usr/src/app/vision_service
 RUN python3 setup.py -q develop
