@@ -31,7 +31,7 @@ Prerequisites:
 import os
 import json
 import requests
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
 from PIL import Image
 import paho.mqtt.client as mqtt
 import logging
@@ -42,10 +42,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DEALER_URL: str = os.getenv("DEALER_URL", "")
-MQTT_BROKER_URL: str = os.getenv("MQTT_BROKER_URL", "")
+MQTT_BROKER_URL: str = os.getenv("MQTT_BROKER_URL", "mqtt")
 MQTT_BROKER_PORT: int = int(os.getenv("MQTT_BROKER_PORT", "1883"))
-TOPIC_NAME: str = os.getenv("TOPIC_NAME", "")
 
+TOPIC_NAME: str = os.getenv("TOPIC_NAME", "")
 MEDIA_PATH: str = "media" #Media path, save converted images from topic
 
 
@@ -75,10 +75,11 @@ def convert_image(byte_data: bytes, event_id: str) -> str:
         return png_image_path
     except IOError:
         logger.error(f"Cannot convert image: {image_path}")
-        return image_path
+        os.remove(image_path)
+        return False
 
 
-def detect_state_number(event_id: str) -> Optional[Tuple[...]]:
+def detect_state_number(event_id: str) -> Union[Tuple, bool]:
     """Detects the state number from an image.
 
     Args:
@@ -88,8 +89,13 @@ def detect_state_number(event_id: str) -> Optional[Tuple[...]]:
         The detected state number, if any.
     """
     image_path = f"{MEDIA_PATH}/state_numbers/state_number_{event_id}.jpeg"
-    attrs = process_image(image_path)
-    return attrs
+    if os.path.exists(image_path):
+        attrs = process_image(image_path)
+        os.remove(image_path)
+        return attrs
+
+    else:
+        return False
 
 
 def send_event(
@@ -99,7 +105,7 @@ def send_event(
     full_url_path = f"{DEALER_URL}/api/events/{camera_name}/{detected_number}/create"
     data = {
         "sub_label": label,
-        "duration": 5,
+        "duration": 0.1,
         "draw": {"boxes": [{"box": boxes, "color": [255, 0, 0], "score": 100}]},
     }
     try:
@@ -133,14 +139,17 @@ def on_message(client, userdata, msg):
     camera = topic_data["before"].get("camera")
     byte_data = get_event_data(event_id)
     if isinstance(byte_data, bytes):
-        convert_image(byte_data, event_id)
+        convert_result = convert_image(byte_data, event_id)
+        if isinstance(convert_result, bool):
+            logging.info("Image is not converted")
+            return
         detected_number_result = detect_state_number(event_id)
-        if detected_number_result:
+        if isinstance(detected_number_result, tuple):
             send_event(
                 camera_name=camera,
                 label="state_number",
                 boxes=box,
-                detected_number=detected_number_result,
+                detected_number=detected_number_result[0],
             )
     else:
         logger.warning("Failed to process the event")
