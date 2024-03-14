@@ -6,3 +6,5 @@ pillow==10.2.0
 python-decouple==3.8
 requests==2.31.0
 urllib3==2.2.1
+asyncio-mqtt==0.16.2
+aiohttp==3.9.3

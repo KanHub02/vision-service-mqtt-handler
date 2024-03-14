@@ -15,17 +15,10 @@ Key Features:
 - Implements in-memory image processing for efficiency.
 - Includes robust logging for easier troubleshooting and monitoring.
 
-Environment Variables:
-- DEALER_URL: URL of the DEALER_URL server.
-- MQTT_BROKER_URL: URL of the MQTT broker.
-- MQTT_BROKER_PORT: Port of the MQTT broker.
-- TOPIC_NAME: MQTT topic to subscribe to for events.
-
 Prerequisites:
 - paho-mqtt: For MQTT communication.
 - Pillow (PIL): For image processing.
 - requests: For HTTP requests to send events.
-
 """
 
 import os
@@ -37,16 +30,17 @@ import paho.mqtt.client as mqtt
 import logging
 
 from vision_service.execute import process_image
+from config import (
+    DEALER_URL,
+    MQTT_BROKER_URL,
+    MQTT_BROKER_PORT,
+    TOPIC_NAME,
+    MEDIA_PATH,
+)
+
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-DEALER_URL: str = os.getenv("DEALER_URL", "")
-MQTT_BROKER_URL: str = os.getenv("MQTT_BROKER_URL", "mqtt")
-MQTT_BROKER_PORT: int = int(os.getenv("MQTT_BROKER_PORT", "1883"))
-
-TOPIC_NAME: str = os.getenv("TOPIC_NAME", "")
-MEDIA_PATH: str = "media" #Media path, save converted images from topic
+logger = logging.getLogger("MQTT_BROKER")
 
 
 def convert_image(byte_data: bytes, event_id: str) -> str:
@@ -64,13 +58,13 @@ def convert_image(byte_data: bytes, event_id: str) -> str:
     image_path = f"{MEDIA_PATH}/state_numbers/{image_name}"
 
     # Write the original JPEG image
-    with open(image_path, 'wb') as file:
+    with open(image_path, "wb") as file:
         file.write(byte_data)
 
     # Attempt to convert to PNG
     try:
         with Image.open(image_path) as image:
-            png_image_path = image_path.replace('.jpeg', '.png')
+            png_image_path = image_path.replace(".jpeg", ".png")
             image.save(png_image_path, "PNG")
         return png_image_path
     except IOError:
