@@ -20,7 +20,7 @@ First, clone the repository and its submodules using the following command:
 
 bash
 
-git clone --recurse-submodules git@github.com:YourUsername/your-repo-name.git
+git clone --recurse-submodules git@github.com:PetaBytePro/vision_service.git
 
 This command clones the main repository and initializes and updates each submodule in the repository, such as the vision_service submodule.
 Setup with Docker
